@@ -9,7 +9,7 @@ const asyncHandler = (requestHandler) => {
 export { asyncHandler };
 
 /*
-const asyncHandler = (fn) =>()=>{
+const asyncHandler = (fn) => async ()=>{
     try{
         await fn(req, res, next);
     }

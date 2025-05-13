@@ -27,15 +27,24 @@ const registerUser = asyncHandler(async (req, res) => {
         throw new ApiError(400, "All fileds are required");
     }
 
-    const existingUser = User.findOne({
+    const existingUser = await User.findOne({
         $or: [{ userName }, { email }],
     });
     if (existingUser) {
         throw new ApiError(409, "User with email or username already exist");
     }
-
+    // console.log(req.files);
     const avatarLocalPath = req.files?.avatar[0]?.path;
-    const coverImageLocalPath = req.files?.coverImage[0]?.path;
+    // const coverImageLocalPath = req.files?.coverImage[0]?.path;
+
+    let coverImageLocalPath;
+    if (
+        req.files &&
+        Array.isArray(req.files.coverImage) &&
+        req.files.coverImage > 0
+    ) {
+        coverImageLocalPath = req.files.coverImage[0].path;
+    }
 
     if (!avatarLocalPath) {
         throw new ApiError(400, "Avatar is required!");
@@ -46,7 +55,8 @@ const registerUser = asyncHandler(async (req, res) => {
     if (!avatar) {
         throw new ApiError(400, "Avatar is required!");
     }
-
+    // console.log("Cover image local path:", coverImageLocalPath);
+    // console.log("Cover image cloudinary response:", coverImage);
     const user = await User.create({
         fullName,
         avatar: avatar.url,
@@ -66,7 +76,7 @@ const registerUser = asyncHandler(async (req, res) => {
         );
     }
     return res
-        .staus(201)
+        .status(201)
         .json(
             new ApiResponse(200, createdUser, "User Registered Successfully")
         );

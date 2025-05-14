@@ -56,7 +56,7 @@ const registerUser = asyncHandler(async (req, res) => {
     if (
         req.files &&
         Array.isArray(req.files.coverImage) &&
-        req.files.coverImage > 0
+        req.files.coverImage.length > 0
     ) {
         coverImageLocalPath = req.files.coverImage[0].path;
     }
@@ -114,7 +114,10 @@ const loginUser = asyncHandler(async (req, res) => {
     });
 
     if (!user) {
-        throw new ApiError(404, "User does not exist, create a accountfirst !");
+        throw new ApiError(
+            404,
+            "User does not exist, create a account first !"
+        );
     }
     const isPasswordValid = await user.isPasswordCorrect(password);
     if (!isPasswordValid) {
@@ -250,7 +253,7 @@ const updateAccountDetails = asyncHandler(async (req, res) => {
         throw new ApiError(400, "All fields are required");
     }
 
-    User.findByIdAndUpdate(
+    const user = await User.findByIdAndUpdate(
         req.user?._id,
         {
             $set: {

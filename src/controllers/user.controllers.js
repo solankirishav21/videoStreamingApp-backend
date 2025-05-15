@@ -40,7 +40,7 @@ const registerUser = asyncHandler(async (req, res) => {
             (field) => field?.trim() === ""
         )
     ) {
-        throw new ApiError(400, "All fileds are required");
+        throw new Error(400, "All fileds are required");
     }
 
     const existingUser = await User.findOne({

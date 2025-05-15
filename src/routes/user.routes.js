@@ -13,7 +13,7 @@ import {
     getWatchHistory,
 } from "../controllers/user.controllers.js";
 import { upload } from "../middlewares/multer.middleware.js";
-import { verifytJWT } from "../middlewares/auth.middleware.js";
+import { verifyJWT } from "../middlewares/auth.middleware.js";
 
 const router = Router();
 
@@ -35,18 +35,18 @@ router.route("/login").post(loginUser);
 
 // Secured Routes
 
-router.route("/logout").post(verifytJWT, logOutUser);
+router.route("/logout").post(verifyJWT, logOutUser);
 router.route("/refreshAccessToken").post(refreshAccessToken);
-router.route("/changePassword").post(verifytJWT, changeCurrentPassword);
-router.route("/currentUser").post(verifytJWT, getCurrentUser);
-router.route("/updateAccount").patch(verifytJWT, updateAccountDetails);
+router.route("/changePassword").post(verifyJWT, changeCurrentPassword);
+router.route("/currentUser").post(verifyJWT, getCurrentUser);
+router.route("/updateAccount").patch(verifyJWT, updateAccountDetails);
 router
     .route("/changeAvatar")
-    .patch(verifytJWT, upload.single("avatar"), updateUserAvatar);
+    .patch(verifyJWT, upload.single("avatar"), updateUserAvatar);
 router
     .route("/changeCoverImage")
-    .patch(verifytJWT, upload.single("coverImage"), updateUserCoverImage);
-router.route("/c/:userName").get(verifytJWT, getUserChannelProfile);
-router.route("/watchHistory").get(verifytJWT, getWatchHistory);
+    .patch(verifyJWT, upload.single("coverImage"), updateUserCoverImage);
+router.route("/c/:userName").get(verifyJWT, getUserChannelProfile);
+router.route("/watchHistory").get(verifyJWT, getWatchHistory);
 
 export default router;

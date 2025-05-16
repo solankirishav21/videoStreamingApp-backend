@@ -23,6 +23,7 @@ import communityPostRouter from "./routes/communityPost.routes.js";
 import likeRouter from "./routes/like.routes.js";
 import subscriptionRouter from "./routes/subscription.routes.js";
 import commentRouter from "./routes/comment.routes.js";
+import playlistRouter from "./routes/playlist.routes.js";
 
 app.use("/api/v1/users", userRouter);
 app.use("/api/v1/healthCheck", healthcheckRouter);
@@ -31,5 +32,6 @@ app.use("/api/v1/communityPost", communityPostRouter);
 app.use("/api/v1/likes", likeRouter);
 app.use("/api/vi/subscription", subscriptionRouter);
 app.use("/api/v1/comment", commentRouter);
+app.use("/api/v1/playlist", playlistRouter);
 
 export { app };

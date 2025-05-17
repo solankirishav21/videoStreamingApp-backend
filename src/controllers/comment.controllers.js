@@ -20,26 +20,26 @@ const getVideoComments = asyncHandler(async (req, res) => {
         },
         {
             $lookup: {
-                from: "vidoes",
-                localField: "video",
+                from: "users",
+                localField: "owner",
                 foreignField: "_id",
-                as: "CommentOnWhichVideo",
+                as: "ownerDetails",
             },
+        },
+        {
+            $unwind: "$ownerDetails",
         },
         {
             $project: {
                 content: 1,
-                owner: {
-                    $arrayElemAt: ["$OwnerOfComment", 0],
-                },
-                video: {
-                    $arrayElemAt: ["CommentOnWhichVideo", 0],
-                },
                 createdAt: 1,
+                "owner._id": "$ownerDetails._id",
+                "owner.name": "$ownerDetails.name",
+                "owner.email": "$ownerDetails.email",
             },
         },
         {
-            $skip: (page - 1) * parseInt(limit),
+            $skip: (parseInt(page) - 1) * parseInt(limit),
         },
         {
             $limit: parseInt(limit),

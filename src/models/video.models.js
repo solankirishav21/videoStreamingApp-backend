@@ -5,7 +5,7 @@ const videoSchema = new mongoose.Schema(
     {
         videoFile: {
             type: String,
-            reuired: true,
+            required: true,
         },
         thumbnail: {
             type: String,
@@ -14,10 +14,12 @@ const videoSchema = new mongoose.Schema(
         owner: {
             type: mongoose.Schema.Types.ObjectId,
             ref: "User",
+            index: true,
         },
         title: {
             type: String,
             required: true,
+            index: true,
         },
         description: {
             type: String,

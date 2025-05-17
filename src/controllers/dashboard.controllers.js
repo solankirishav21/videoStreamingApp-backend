@@ -2,6 +2,8 @@ import mongoose from "mongoose";
 import { Video } from "../models/video.models.js";
 import { Subscription } from "../models/subscription.models.js";
 import { Like } from "../models/like.models.js";
+import { Comment } from "../models/comment.models.js";
+import { CommunityPost } from "../models/communityPost.models.js";
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
@@ -36,7 +38,7 @@ const getChannelStats = asyncHandler(async (req, res) => {
         );
     }
     const totalCommentLikes = await Like.countDocuments({
-        video: {
+        comment: {
             $in: await Comment.find({ owner: userId }).distinct("_id"),
         },
     });
@@ -47,7 +49,7 @@ const getChannelStats = asyncHandler(async (req, res) => {
         );
     }
     const totalPostLikes = await Like.countDocuments({
-        video: {
+        communityPost: {
             $in: await CommunityPost.find({ owner: userId }).distinct("_id"),
         },
     });
@@ -62,7 +64,7 @@ const getChannelStats = asyncHandler(async (req, res) => {
         {
             $group: {
                 _id: null,
-                totalViews: { $sum: "$views" }, // Sum up the `views` field
+                totalViews: { $sum: "$views" },
             },
         },
     ]);
@@ -83,7 +85,7 @@ const getChannelStats = asyncHandler(async (req, res) => {
                 totalVideoLikes,
                 totalViews: totalViews[0]?.totalViews || 0,
             },
-            "Channel Stats Fetched Succesfully"
+            "Channel Stats Fetched Successfully"
         )
     );
 });

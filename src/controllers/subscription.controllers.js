@@ -1,10 +1,8 @@
-import mongoose, { isValidObjectId } from "mongoose";
-import { User } from "../models/user.models.js";
+import { isValidObjectId } from "mongoose";
 import { Subscription } from "../models/subscription.models.js";
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
-import { CommunityPost } from "../models/communityPost.models.js";
 
 const toggleSubscription = asyncHandler(async (req, res) => {
     const { channelId } = req.params;
@@ -26,7 +24,7 @@ const toggleSubscription = asyncHandler(async (req, res) => {
             .status(200)
             .json(new ApiResponse(200, {}, "Channel Unsubscribed"));
     }
-    const newSubscriber = Subscription.create({
+    const newSubscriber = await Subscription.create({
         channel: channelId,
         subscriber: subscriberId,
     });

@@ -12,6 +12,15 @@ const getAllVideos = asyncHandler(async (req, res) => {
     const pageNumber = parseInt(page);
     const pageLimit = parseInt(limit);
 
+    if (
+        isNaN(pageNumber) ||
+        isNaN(pageLimit) ||
+        pageNumber < 1 ||
+        pageLimit < 1
+    ) {
+        throw new ApiError(400, "Invalid pagination parameters");
+    }
+
     let searchConditions = {};
 
     if (query) {
@@ -24,32 +33,34 @@ const getAllVideos = asyncHandler(async (req, res) => {
     }
 
     if (userId && isValidObjectId(userId)) {
-        searchConditions.userId = userId;
+        searchConditions.owner = userId;
     }
 
-    const sortOrder = sortType === "asec" ? 1 : -1;
+    const sortOrder = sortType === "asc" ? 1 : -1;
 
     const videos = await Video.find(searchConditions)
-        .sort(sortOrder)
+        .sort({ [sortBy || "createdAt"]: sortOrder })
         .skip((pageNumber - 1) * pageLimit)
         .limit(pageLimit);
 
     const totalVideos = await Video.countDocuments(searchConditions);
 
-    const totalPages = Math.celi(totalVideo / pageLimit);
+    const totalPages = Math.ceil(totalVideos / pageLimit);
 
     return res.status(200).json(
-        new ApiResponse({
-            success: true,
-            message: "Videos retrived successfully",
-            data: videos,
-            pagination: {
-                page: pageNumber,
-                limit: pageLimit,
-                totalPages,
-                totalVideos,
+        new ApiResponse(
+            200,
+            {
+                videos,
+                pagination: {
+                    page: pageNumber,
+                    limit: pageLimit,
+                    totalPages,
+                    totalVideos,
+                },
             },
-        })
+            "Videos retrieved successfully"
+        )
     );
 });
 
@@ -89,12 +100,6 @@ const publishAVideo = asyncHandler(async (req, res) => {
             thumbnail: thumbnail.url,
             duration,
         });
-        if (req.user.id !== video.userId.toString()) {
-            throw new ApiError(
-                403,
-                "you are not authorize to access this video"
-            );
-        }
         if (!video) {
             throw new ApiError(
                 500,
@@ -105,7 +110,13 @@ const publishAVideo = asyncHandler(async (req, res) => {
             .status(201)
             .json(new ApiResponse(201, video, "Video Published Successfully"));
     } catch (error) {
-        throw new ApiError(500, error);
+        if (videoFile?.public_id) {
+            await uploadOnCloudinary.deleteResource(videoFile.public_id);
+        }
+        if (thumbnail?.public_id) {
+            await uploadOnCloudinary.deleteResource(thumbnail.public_id);
+        }
+        throw new ApiError(500, error?.message || "Error uploading video");
     }
 });
 
@@ -120,7 +131,7 @@ const getVideoById = asyncHandler(async (req, res) => {
     }
     return res
         .status(200)
-        .json(new ApiResponse(200, video, "Video Fetched Succesfully"));
+        .json(new ApiResponse(200, video, "Video Fetched Successfully"));
 });
 
 const updateVideo = asyncHandler(async (req, res) => {
@@ -162,7 +173,7 @@ const updateVideo = asyncHandler(async (req, res) => {
             new ApiResponse(
                 200,
                 updatedVideoDetails,
-                "Video Details Updated Succesfully"
+                "Video Details Updated Successfully"
             )
         );
 });
@@ -175,20 +186,35 @@ const deleteVideo = asyncHandler(async (req, res) => {
     const video = await Video.findById(videoId);
 
     if (!video) {
-        throw new ApiError(404, "video not found.");
+        throw new ApiError(404, "Video not found");
     }
 
-    if (req.user.id !== video.userId.toString()) {
-        throw new ApiError(403, "you are not authorize to access this video");
+    if (req.user._id.toString() !== video.owner.toString()) {
+        throw new ApiError(403, "You are not authorized to access this video");
     }
 
     try {
-        await uploadOnCloudinary.deleteResource(video.cloudinaryPublicId);
+        // Delete from cloudinary
+        const videoPublicId = video.videoFile.split("/").pop().split(".")[0];
+        const thumbnailPublicId = video.thumbnail
+            .split("/")
+            .pop()
+            .split(".")[0];
+
+        await Promise.all([
+            uploadOnCloudinary.deleteResource(videoPublicId),
+            uploadOnCloudinary.deleteResource(thumbnailPublicId),
+        ]);
     } catch (error) {
-        console.error("error while deleting the video from cloudinary", error);
-        throw new ApiError(500, "video could not be deleted from cloudinary");
+        console.error("Error while deleting the video from cloudinary", error);
+        throw new ApiError(500, "Video could not be deleted from cloudinary");
     }
-    await video.remove();
+
+    const deletedVideo = await Video.findByIdAndDelete(videoId);
+    if (!deletedVideo) {
+        throw new ApiError(500, "Error deleting video from database");
+    }
+
     return res
         .status(200)
         .json(new ApiResponse(200, deletedVideo, "Video Deleted Successfully"));
@@ -203,8 +229,8 @@ const togglePublishStatus = asyncHandler(async (req, res) => {
     if (!video) {
         throw new ApiError(404, "Video does not exist");
     }
-    if (req.user.id !== video.userId.toString()) {
-        throw new ApiError(403, "you are not authorize to access this video");
+    if (req.user._id.toString() !== video.owner.toString()) {
+        throw new ApiError(403, "You are not authorized to access this video");
     }
     video.isPublished = !video.isPublished;
     await video.save();

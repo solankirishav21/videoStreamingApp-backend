@@ -31,7 +31,7 @@ app.use("/api/v1/healthCheck", healthcheckRouter);
 app.use("/api/v1/videos", videoRouter);
 app.use("/api/v1/communityPost", communityPostRouter);
 app.use("/api/v1/likes", likeRouter);
-app.use("/api/vi/subscription", subscriptionRouter);
+app.use("/api/v1/subscription", subscriptionRouter);
 app.use("/api/v1/comment", commentRouter);
 app.use("/api/v1/playlist", playlistRouter);
 app.use("/api/v1/dashboard", dashboardRouter);
